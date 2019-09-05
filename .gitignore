@@ -28,6 +28,7 @@ _ext
 .DS_Store
 
 # dirs
+results/
 data/
 en_es_data/
 sanity_check_en_es_data/
