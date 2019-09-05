@@ -27,4 +27,7 @@ _ext
 # MacOS
 .DS_Store
 
-
+# dirs
+data/
+en_es_data/
+sanity_check_en_es_data/
