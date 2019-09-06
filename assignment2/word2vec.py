@@ -115,34 +115,23 @@ def negSamplingLossAndGradient(
     gradOutsideVecs = np.zeros(outsideVectors.shape)
 
     ### Please use your implementation of sigmoid in here.
-    out_prob = np.concatenate([ [sigmoid(np.dot(outsideVectors[indices[0]], centerWordVec))], \
-               sigmoid(np.dot(-outsideVectors[indices[1:]], centerWordVec)) ])  # (K+1,)
-    loss = -np.log(out_prob).sum()
+    out_probs = np.concatenate([ [sigmoid(np.dot(outsideVectors[indices[0]], centerWordVec))], \
+               sigmoid(-np.dot(outsideVectors[indices[1:]], centerWordVec)) ])  # (K+1,)
+    loss = -np.log(out_probs).sum()
 
-    out_prob[0] -= 1.0
-    out_prob[1:] = 1.0 - out_prob[1:]
-    gradCenterVec += out_prob.dot(outsideVectors[indices])  # (M,) = (K+1,) dot (K+1, M)
-    gradOutsideVecs[indices] += out_prob[:, None].dot(centerWordVec[None, :])  # (K+1, M) = (K+1, 1) dot (1, M)
+    out_probs[0] -= 1.0
+    out_probs[1:] = 1.0 - out_probs[1:]
+    gradCenterVec += out_probs.dot(outsideVectors[indices])  # (M,) = (K+1,) dot (K+1, M)
+    for k, idx in enumerate(indices):
+        gradOutsideVecs[idx] += out_probs[k] * centerWordVec
 
-    # loss = 0.0
-    # z = sigmoid(np.dot(outsideVectors[outsideWordIdx], centerWordVec))
-    # loss -= np.log(z)
+    # My finding:
+    #
+    # Cannot used the code in the line below, because there may be repeated
+    # elements in indices. The gradient won't be accumulated for the repeated
+    # ones, causing wrong results in gradOutsideVecs
 
-    # gradOutsideVecs[outsideWordIdx] += centerWordVec * (z - 1.0)
-    # gradCenterVec += outsideVectors[outsideWordIdx] * (z - 1.0)
-
-    # for k in range(K):
-    #     samp = indices[k+1]
-    #     z = sigmoid(np.dot(-outsideVectors[samp], centerWordVec))
-    #     loss -= np.log(z)
-    #     gradOutsideVecs[samp] +=  centerWordVec * (1.0 - z)
-    #     gradCenterVec += outsideVectors[samp] * (1.0 - z)
-    # gradOutsideVecs[outsideWordIdx] += centerWordVec * (out_prob[0] - 1.0)
-    # gradCenterVec += outsideVectors[outsideWordIdx] * (out_prob[0] - 1.0)
-    # for k in range(K):
-    #     samp = indices[k+1]
-    #     gradOutsideVecs[samp] +=  centerWordVec * (1.0 - out_prob[samp])
-    #     gradCenterVec += outsideVectors[samp] * (1.0 - out_prob[samp])
+    # gradOutsideVecs[indices] += out_probs[:, None].dot(centerWordVec[None, :])  # (K+1, M) = (K+1, 1) dot (1, M)
 
     ### END YOUR CODE
 
@@ -192,7 +181,6 @@ def skipgram(currentCenterWord, windowSize, outsideWords, word2Ind,
         outsideWordIdx = word2Ind[w]
         l, gradCenter, gradOutside = word2vecLossAndGradient(
             centerWordVec, outsideWordIdx, outsideVectors, dataset)
-
         loss += l
         gradCenterVecs[centerWordIdx] += gradCenter
         gradOutsideVectors += gradOutside
