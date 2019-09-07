@@ -111,12 +111,13 @@ def negSamplingLossAndGradient(
     indices = [outsideWordIdx] + negSampleWordIndices
 
     ### YOUR CODE HERE
-    gradCenterVec = np.zeros(centerWordVec.shape)
-    gradOutsideVecs = np.zeros(outsideVectors.shape)
+    gradCenterVec = np.zeros(centerWordVec.shape, dtype=np.float32)
+    gradOutsideVecs = np.zeros(outsideVectors.shape, dtype=np.float32)
+    out_probs = np.zeros(K+1, dtype=np.float32)
 
     ### Please use your implementation of sigmoid in here.
-    out_probs = np.concatenate([ [sigmoid(np.dot(outsideVectors[indices[0]], centerWordVec))], \
-               sigmoid(-np.dot(outsideVectors[indices[1:]], centerWordVec)) ])  # (K+1,)
+    out_probs[0] += sigmoid(np.dot(outsideVectors[indices[0]], centerWordVec))
+    out_probs[1:] += sigmoid(-np.dot(outsideVectors[indices[1:]], centerWordVec))
     loss = -np.log(out_probs).sum()
 
     out_probs[0] -= 1.0
@@ -170,8 +171,8 @@ def skipgram(currentCenterWord, windowSize, outsideWords, word2Ind,
     """
 
     loss = 0.0
-    gradCenterVecs = np.zeros(centerWordVectors.shape)
-    gradOutsideVectors = np.zeros(outsideVectors.shape)
+    gradCenterVecs = np.zeros(centerWordVectors.shape, dtype=np.float32)
+    gradOutsideVectors = np.zeros(outsideVectors.shape, dtype=np.float32)
 
     ### YOUR CODE HERE
     centerWordIdx = word2Ind[currentCenterWord]
